@@ -14,16 +14,13 @@ client = boto3.client(
 )
 
 while True:
-	messages = client.receive_message(QueueUrl=conf['reader-sqs-queue'], MaxNumberOfMessages=10)
+	messages = client.receive_message(QueueUrl=conf['reader-sqs-queue'], MaxNumberOfMessages=10, WaitTimeSeconds=10)
 
 	if 'Messages' in messages:
 		for m in messages['Messages']:
-			print(m)
-			client.send_message(
-			  QueueUrl=conf['writer-sqs-queue'],
-			  MessageBody=m['Body'],
-			  MessageGroupId=conf['message-group-id']
-			)
+			print(m['Body'])
+			ret = client.send_message( QueueUrl=conf['writer-sqs-queue'], MessageBody=m['Body'], MessageGroupId=conf['message-group-id'])
+			print(ret)
 			client.delete_message(QueueUrl=conf['reader-sqs-queue'], ReceiptHandle=m['ReceiptHandle'])
 	else:
 		print('Queue is currently empty or messages are invisible')
